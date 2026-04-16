@@ -26,9 +26,11 @@
             --ai-bubble: transparent;
             --input-bg: #1e1f20;
             --accent-color: #64b5f6;
-            --dot-color: #64b5f6;
             --radius: 18px;
             --radius-large: 24px;
+            --toast-bg: #323232;
+            --icon-bg: #4a4a4a;
+            --ripple-color: rgba(100, 181, 246, 0.4);
         }
 
         body.light {
@@ -38,12 +40,14 @@
             --text-primary: #202124;
             --text-secondary: #5f6368;
             --border-color: #dadce0;
-            --user-bubble: #d3eafd; /* 柔和淡蓝 */
-            --user-text: #1a5fb4; /* 文字深蓝 */
+            --user-bubble: #d3eafd;
+            --user-text: #1a5fb4;
             --ai-bubble: transparent;
             --input-bg: #ffffff;
             --accent-color: #1967d2;
-            --dot-color: #1967d2;
+            --toast-bg: #606060;
+            --icon-bg: #d0d0d0;
+            --ripple-color: rgba(25, 103, 210, 0.3);
         }
 
         html, body {
@@ -52,23 +56,14 @@
             overflow: hidden;
             background: var(--bg-primary);
             font-family: 'Google Sans', 'Roboto', sans-serif;
+            transition: background 0.3s ease;
         }
 
-        body {
-            display: flex;
-            flex-direction: column;
-        }
+        body { display: flex; flex-direction: column; }
 
-        #chat-scroller::-webkit-scrollbar {
-            width: 6px;
-        }
-        #chat-scroller::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #chat-scroller::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 99px;
-        }
+        #chat-scroller::-webkit-scrollbar { width: 6px; }
+        #chat-scroller::-webkit-scrollbar-track { background: transparent; }
+        #chat-scroller::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 99px; }
 
         header {
             padding: 12px 20px;
@@ -78,56 +73,46 @@
             background: var(--bg-primary);
             border-bottom: 1px solid var(--border-color);
             z-index: 10;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
-        .logo-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .logo-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .logo-box h1 {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
+        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo-icon { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; }
+        .logo-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .logo-box h1 { font-size: 18px; font-weight: 500; color: var(--text-primary); transition: color 0.3s ease; }
+
         .controls i {
-            font-size: 20px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 20px; color: var(--text-secondary); cursor: pointer;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: background 0.2s ease, color 0.2s ease;
         }
+        .controls i:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 
         #chat-scroller {
-            flex: 1;
-            overflow-y: auto;
-            padding: 32px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
+            flex: 1; overflow-y: auto; padding: 32px 20px;
+            display: flex; flex-direction: column; gap: 24px;
+            max-width: 768px; margin: 0 auto; width: 100%;
             scroll-behavior: smooth;
-            max-width: 768px;
-            margin: 0 auto;
-            width: 100%;
         }
+
+        .welcome-zone {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; flex: 1; text-align: center;
+            padding: 40px 20px; gap: 16px; opacity: 0.85;
+        }
+        .welcome-zone .w-icon { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; margin-bottom: 8px; }
+        .welcome-zone .w-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .welcome-zone .w-title { font-size: 22px; font-weight: 600; color: var(--text-primary); }
+        .welcome-zone .w-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.6; max-width: 360px; }
+        .quick-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+        .quick-tag {
+            padding: 8px 16px; border-radius: 20px; font-size: 13px;
+            background: var(--bg-secondary); color: var(--text-secondary);
+            border: 1px solid var(--border-color); cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quick-tag:hover { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--text-secondary); }
 
         .msg-group {
             display: flex;
@@ -135,23 +120,21 @@
             animation: geminiSlide 0.3s ease;
             margin-bottom: 8px;
         }
-        .msg-group.user {
-            justify-content: flex-end;
-        }
-        @keyframes geminiSlide {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .msg-group.user { justify-content: flex-end; }
+        @keyframes geminiSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .msg-content { display: flex; flex-direction: column; max-width: 85%; }
+        .msg-group.user .msg-content { align-items: flex-end; }
 
         .bubble-box {
             position: relative;
-            max-width: 85%;
             padding: 12px 16px;
             border-radius: var(--radius);
             font-size: 15px;
             line-height: 1.5;
             word-break: break-word;
             white-space: pre-wrap;
+            transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
         }
 
         .msg-group.ai .bubble-box {
@@ -193,24 +176,25 @@
             border-radius: 0 4px 0 4px;
         }
 
-        .loading-dots {
-            display: flex;
-            gap: 4px;
-            padding: 12px 16px;
+        .msg-actions {
+            display: flex; gap: 2px; margin-top: 6px; margin-left: 4px; opacity: 0;
+            transition: opacity 0.2s ease;
         }
-        .loading-dots span {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--text-secondary);
-            animation: dotPulse 1.4s infinite ease-in-out both;
+        .msg-group.ai:hover .msg-actions { opacity: 1; }
+        @media (hover: none) { .msg-actions { opacity: 0.6; } }
+
+        .msg-actions button {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 8px;
+            display: flex; align-items: center; gap: 4px; transition: all 0.15s ease;
         }
+        .msg-actions button:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+        .loading-dots { display: flex; gap: 4px; padding: 12px 16px; }
+        .loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-secondary); animation: dotPulse 1.4s infinite ease-in-out both; }
         .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
         .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes dotPulse {
-            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-            40% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes dotPulse { 0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
 
         .footer-wrap {
             padding: 16px 20px 24px;
@@ -218,15 +202,11 @@
             max-width: 768px;
             margin: 0 auto;
             width: 100%;
+            transition: background 0.3s ease;
         }
         .input-box {
-            background: var(--input-bg);
-            border-radius: 28px;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid var(--border-color);
+            background: var(--input-bg); border-radius: 28px; padding: 8px 16px;
+            display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-color);
             transition: all 0.2s ease;
         }
         .input-box:focus-within {
@@ -234,39 +214,91 @@
             background: var(--bg-secondary);
         }
         #userInput {
-            flex: 1;
-            border: none;
-            outline: none;
-            background: transparent;
-            color: var(--text-primary);
-            font-size: 15px;
-            padding: 8px 0;
-            resize: none;
-            max-height: 150px;
-            line-height: 1.4;
+            flex: 1; border: none; outline: none; background: transparent;
+            color: var(--text-primary); font-size: 15px; padding: 8px 0; resize: none;
+            max-height: 150px; line-height: 1.4;
         }
-        #userInput::placeholder {
-            color: var(--text-secondary);
-        }
+        #userInput::placeholder { color: var(--text-secondary); }
+
+        /* 提问图标样式 */
         .send-btn {
-            width: 36px;
-            height: 36px;
-            background: var(--accent-color);
+            width: 38px;
+            height: 38px;
             border: none;
             border-radius: 50%;
-            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
+            background: var(--icon-bg);
+            border: 1px solid var(--border-color);
+            transition: opacity 0.3s ease;
+            padding: 0;
+            overflow: visible;
+            position: relative;
         }
-        .send-btn i {
-            font-size: 14px;
+        .send-btn img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            pointer-events: none;
+            position: relative;
+            z-index: 2;
         }
+        .send-btn.empty {
+            opacity: 0.85;
+        }
+
+        /* 水波纹效果 */
+        .send-btn.loading::before,
+        .send-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid var(--ripple-color);
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .send-btn.loading::before {
+            animation: ripple1 1.8s infinite ease-out;
+        }
+        .send-btn.loading::after {
+            animation: ripple2 1.8s 0.6s infinite ease-out;
+        }
+        @keyframes ripple1 {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+        @keyframes ripple2 {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+
+        /* 悬停和点击不变色 */
+        .send-btn:hover { background: var(--icon-bg); border-color: var(--border-color); }
+        .send-btn:active { transform: scale(0.92); transition-duration: 0.1s; }
+
+        .toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--toast-bg); color: #fff; padding: 10px 20px;
+            border-radius: 10px; font-size: 13px; z-index: 999;
+            opacity: 0; transition: all 0.3s ease; pointer-events: none; white-space: nowrap;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .has-chat .welcome-zone { display: none; }
+        .no-chat #chat-scroller { justify-content: center; }
     </style>
 </head>
-<body class="dark">
+<body class="dark no-chat">
+
     <header>
         <div class="logo-box">
             <div class="logo-icon">
@@ -275,95 +307,265 @@
             <h1>智能Ai · 星火</h1>
         </div>
         <div class="controls">
+            <i id="clearBtn" class="fa-regular fa-trash-can" title="清除记录"></i>
             <i id="themeToggle" class="fa-solid fa-moon"></i>
         </div>
     </header>
 
     <div id="chat-scroller">
-        <div class="msg-group ai">
-            <div class="bubble-box">✨ 您好！我是智能助手，基于讯飞星火Lite 1.5模型，很高兴为您服务。~</div>
+        <div class="welcome-zone">
+            <div class="w-icon"><img src="https://cdn.jsdmirror.com/gh/iTaoPu/Chat.Ai@List/Spark.png"></div>
+            <div class="w-title">你好，有什么可以帮你的？</div>
+            <div class="w-sub">✨ 您好！我是智能Ai · 星火，基于讯飞星火Lite 1.5模型，很高兴为您服务~</div>
         </div>
     </div>
 
     <div class="footer-wrap">
         <div class="input-box">
             <textarea id="userInput" placeholder="输入消息..." rows="1"></textarea>
-            <button class="send-btn" id="sendAction"><i class="fa-regular fa-paper-plane"></i></button>
+
+            <!-- ★★★ 自定义图标位置：修改下面 src="" 里的网址换成你自己的图标 ★★★ -->
+            <button class="send-btn empty" id="sendAction">
+                <img src="https://cdn.jsdmirror.com/gh/iTaoPu/Chat.Ai@List/Spark.png" alt="发送">
+            </button>
+
         </div>
     </div>
+
+    <div class="toast" id="toast"></div>
 
     <script>
         const API_URL = 'https://api.pearktrue.cn/api/xfai/';
         const scroller = document.getElementById('chat-scroller');
         const input = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendAction');
+        const themeToggle = document.getElementById('themeToggle');
+        const clearBtn = document.getElementById('clearBtn');
+        const toastEl = document.getElementById('toast');
+        let isSending = false;
 
-        themeToggle.onclick = () => {
-            document.body.classList.toggle('light');
-            themeToggle.className = document.body.classList.contains('light') ? 'fa-regular fa-sun' : 'fa-solid fa-moon';
-        };
+        function showToast(msg, duration) {
+            duration = duration || 2000;
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            setTimeout(function() { toastEl.classList.remove('show'); }, duration);
+        }
 
-        function addMsg(text, isUser) {
-            const div = document.createElement('div');
-            div.className = `msg-group ${isUser ? 'user' : 'ai'}`;
-            div.innerHTML = `<div class="bubble-box">${text.replace(/\n/g, '<br>')}</div>`;
+        function copyText(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() { showToast('已复制到剪贴板'); });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta); ta.select();
+                document.execCommand('copy'); document.body.removeChild(ta);
+                showToast('已复制到剪贴板');
+            }
+        }
+
+        function scrollBottom() {
+            requestAnimationFrame(function() { scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' }); });
+        }
+
+        function updateSendBtn() {
+            if (input.value.trim().length > 0 || isSending) {
+                sendBtn.classList.remove('empty');
+            } else {
+                sendBtn.classList.add('empty');
+            }
+        }
+
+        function updateChatState() {
+            var hasMsgs = scroller.querySelectorAll('.msg-group').length > 0;
+            if (hasMsgs) {
+                document.body.classList.remove('no-chat');
+                document.body.classList.add('has-chat');
+            } else {
+                document.body.classList.remove('has-chat');
+                document.body.classList.add('no-chat');
+            }
+        }
+
+        var STORAGE_KEY = 'spark_chat_history';
+        function saveHistory() {
+            var data = [];
+            var msgs = scroller.querySelectorAll('.msg-group');
+            for (var i = 0; i < msgs.length; i++) {
+                var box = msgs[i].querySelector('.bubble-box');
+                if (box) {
+                    data.push({
+                        role: msgs[i].classList.contains('user') ? 'user' : 'ai',
+                        text: box.getAttribute('data-raw') || box.textContent
+                    });
+                }
+            }
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function loadHistory() {
+            try {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                var data = JSON.parse(raw);
+                if (!Array.isArray(data) || !data.length) return;
+                for (var i = 0; i < data.length; i++) {
+                    addMsg(data[i].text, data[i].role === 'user', false);
+                }
+                updateChatState();
+                scrollBottom();
+            } catch(e) {}
+        }
+
+        function clearHistory() {
+            var msgs = scroller.querySelectorAll('.msg-group');
+            for (var i = 0; i < msgs.length; i++) { msgs[i].remove(); }
+            localStorage.removeItem(STORAGE_KEY);
+            updateChatState();
+            showToast('聊天记录已清除');
+        }
+
+        function addMsg(text, isUser, save) {
+            var div = document.createElement('div');
+            div.className = 'msg-group ' + (isUser ? 'user' : 'ai');
+
+            var content = document.createElement('div');
+            content.className = 'msg-content';
+
+            var bubble = document.createElement('div');
+            bubble.className = 'bubble-box';
+            bubble.setAttribute('data-raw', text);
+            bubble.innerHTML = text.replace(/\n/g, '<br>');
+            content.appendChild(bubble);
+
+            if (!isUser) {
+                var actions = document.createElement('div');
+                actions.className = 'msg-actions';
+                var copyBtn = document.createElement('button');
+                copyBtn.setAttribute('aria-label', '复制');
+                copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> 复制';
+                copyBtn.addEventListener('click', function() {
+                    var raw = this.closest('.msg-group').querySelector('.bubble-box').getAttribute('data-raw');
+                    copyText(raw);
+                });
+                actions.appendChild(copyBtn);
+                content.appendChild(actions);
+            }
+
+            div.appendChild(content);
             scroller.appendChild(div);
-            scroller.scrollTop = scroller.scrollHeight;
+            if (save !== false) { saveHistory(); scrollBottom(); }
         }
 
         async function smartReply(msg) {
             msg = msg.trim();
-            if (msg.includes('时间') || msg.includes('几点')) {
+            if (msg.indexOf('时间') > -1 || msg.indexOf('几点') > -1) {
                 return new Date().toLocaleTimeString();
             }
-            if (msg.includes('日期') || msg.includes('几号') || msg.includes('星期')) {
+            if (msg.indexOf('日期') > -1 || msg.indexOf('几号') > -1 || msg.indexOf('星期') > -1) {
                 return new Date().toLocaleDateString('zh-CN', {
                     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
                 });
             }
-            if (msg.includes('天气') || msg.includes('温度')) {
+            if (msg.indexOf('天气') > -1 || msg.indexOf('温度') > -1) {
                 try {
-                    let loc = await fetch('https://ipapi.co/json/');
-                    let city = await loc.json();
-                    let res = await fetch(`https://api.vvhan.com/api/weather?city=${city.city}`);
-                    let data = await res.json();
-                    return `📍 城市：${data.city}\n🌤 天气：${data.info}\n🌡 温度：${data.temperature}℃`;
-                } catch (e) {
-                    return "无法获取天气";
-                }
+                    var loc = await fetch('https://ipapi.co/json/');
+                    var city = await loc.json();
+                    var res = await fetch('https://api.vvhan.com/api/weather?city=' + city.city);
+                    var data = await res.json();
+                    return '📍 城市：' + data.city + '\n🌤 天气：' + data.info + '\n🌡 温度：' + data.temperature + '℃';
+                } catch (e) { return "无法获取天气"; }
             }
             try {
-                let res = await fetch(API_URL + "?message=" + encodeURIComponent(msg));
-                let data = await res.json();
-                return data.answer || data.data?.answer || "我暂时无法回答";
-            } catch {
-                return "服务异常";
-            }
+                var res = await fetch(API_URL + '?message=' + encodeURIComponent(msg));
+                var data = await res.json();
+                return data.answer || (data.data && data.data.answer) || "我暂时无法回答";
+            } catch (e) { return "服务异常"; }
         }
 
         async function send() {
-            const val = input.value.trim();
-            if (!val) return;
+            var val = input.value.trim();
+            if (!val || isSending) return;
+
+            isSending = true;
+            sendBtn.classList.add('loading');
+            sendBtn.classList.remove('empty');
             input.value = '';
+            input.style.height = 'auto';
+            updateSendBtn();
+            updateChatState();
+
             addMsg(val, true);
 
-            const loading = document.createElement('div');
+            var loading = document.createElement('div');
             loading.className = 'msg-group ai';
-            loading.innerHTML = `<div class="bubble-box"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+            var loadContent = document.createElement('div');
+            loadContent.className = 'msg-content';
+            var loadBubble = document.createElement('div');
+            loadBubble.className = 'bubble-box';
+            loadBubble.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+            loadContent.appendChild(loadBubble);
+            loading.appendChild(loadContent);
             scroller.appendChild(loading);
+            scrollBottom();
 
-            let reply = await smartReply(val);
+            var reply = await smartReply(val);
             loading.remove();
             addMsg(reply, false);
+
+            isSending = false;
+            sendBtn.classList.remove('loading');
+            updateSendBtn();
         }
 
-        sendBtn.onclick = send;
-        input.addEventListener('keydown', e => {
+        themeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('light');
+            var isLight = document.body.classList.contains('light');
+            themeToggle.className = isLight ? 'fa-regular fa-sun' : 'fa-solid fa-moon';
+            try { localStorage.setItem('spark_theme', isLight ? 'light' : 'dark'); } catch(e) {}
+        });
+
+        clearBtn.addEventListener('click', clearHistory);
+
+        sendBtn.addEventListener('click', function() {
+            sendBtn.classList.remove('empty');
+            send();
+        });
+
+        input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
+                sendBtn.classList.remove('empty');
                 send();
             }
         });
+
+        input.addEventListener('input', function() {
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 150) + 'px';
+            updateSendBtn();
+        });
+
+        var tags = document.querySelectorAll('.quick-tag');
+        for (var i = 0; i < tags.length; i++) {
+            tags[i].addEventListener('click', function() {
+                var msg = this.getAttribute('data-msg');
+                if (msg) {
+                    input.value = msg;
+                    updateSendBtn();
+                    send();
+                }
+            });
+        }
+
+        (function init() {
+            try {
+                if (localStorage.getItem('spark_theme') === 'light') {
+                    document.body.classList.add('light');
+                    themeToggle.className = 'fa-regular fa-sun';
+                }
+            } catch(e) {}
+            loadHistory();
+            updateSendBtn();
+        })();
     </script>
 </body>
 </html>
