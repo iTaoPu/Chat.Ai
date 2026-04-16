@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>智能Ai · 星火</title>
+    <link rel="icon" href="https://api.fantagiao.com/upload/2025/04/14/f1979090296544779f86864191654379.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-primary: #131314;
+            --bg-secondary: #1e1f20;
+            --bg-tertiary: #28292a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #9aa0a6;
+            --border-color: #333537;
+            --user-bubble: #004f9a;
+            --user-text: #ffffff;
+            --ai-bubble: transparent;
+            --input-bg: #1e1f20;
+            --accent-color: #64b5f6;
+            --dot-color: #64b5f6;
+            --radius: 18px;
+            --radius-large: 24px;
+        }
+
+        body.light {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ebee;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --user-bubble: #d3eafd; /* 柔和淡蓝 */
+            --user-text: #1a5fb4; /* 文字深蓝 */
+            --ai-bubble: transparent;
+            --input-bg: #ffffff;
+            --accent-color: #1967d2;
+            --dot-color: #1967d2;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--bg-primary);
+            font-family: 'Google Sans', 'Roboto', sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-scroller::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-scroller::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #chat-scroller::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 99px;
+        }
+
+        header {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .logo-box h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .controls i {
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #chat-scroller {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            scroll-behavior: smooth;
+            max-width: 768px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .msg-group {
+            display: flex;
+            width: 100%;
+            animation: geminiSlide 0.3s ease;
+            margin-bottom: 8px;
+        }
+        .msg-group.user {
+            justify-content: flex-end;
+        }
+        @keyframes geminiSlide {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bubble-box {
+            position: relative;
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 15px;
+            line-height: 1.5;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .msg-group.ai .bubble-box {
+            background: var(--ai-bubble);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-top-left-radius: 6px;
+        }
+        .msg-group.ai .bubble-box::before {
+            content: "AI";
+            position: absolute;
+            left: -1px;
+            top: -1px;
+            background: var(--accent-color);
+            color: #fff;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 4px 0 4px 0;
+            font-weight: bold;
+        }
+
+        .msg-group.user .bubble-box {
+            background: var(--user-bubble);
+            color: var(--user-text);
+            border-radius: var(--radius-large);
+            border-bottom-right-radius: 6px;
+        }
+        .msg-group.user .bubble-box::after {
+            content: "\f007";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -1px;
+            bottom: -1px;
+            background: var(--accent-color);
+            color: #fff;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 0 4px 0 4px;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: dotPulse 1.4s infinite ease-in-out both;
+        }
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes dotPulse {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .footer-wrap {
+            padding: 16px 20px 24px;
+            background: var(--bg-primary);
+            max-width: 768px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .input-box {
+            background: var(--input-bg);
+            border-radius: 28px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .input-box:focus-within {
+            border-color: var(--accent-color);
+            background: var(--bg-secondary);
+        }
+        #userInput {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 15px;
+            padding: 8px 0;
+            resize: none;
+            max-height: 150px;
+            line-height: 1.4;
+        }
+        #userInput::placeholder {
+            color: var(--text-secondary);
+        }
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .send-btn i {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="dark">
+    <header>
+        <div class="logo-box">
+            <div class="logo-icon">
+                <img src="https://picsum.photos/64/64" alt="LOGO">
+            </div>
+            <h1>智能Ai · 星火</h1>
+        </div>
+        <div class="controls">
+            <i id="themeToggle" class="fa-solid fa-moon"></i>
+        </div>
+    </header>
+
+    <div id="chat-scroller">
+        <div class="msg-group ai">
+            <div class="bubble-box">✨ 您好！我是智能助手，你可以问我天气、时间、日期等问题~</div>
+        </div>
+    </div>
+
+    <div class="footer-wrap">
+        <div class="input-box">
+            <textarea id="userInput" placeholder="输入消息..." rows="1"></textarea>
+            <button class="send-btn" id="sendAction"><i class="fa-regular fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.pearktrue.cn/api/xfai/';
+        const scroller = document.getElementById('chat-scroller');
+        const input = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendAction');
+
+        themeToggle.onclick = () => {
+            document.body.classList.toggle('light');
+            themeToggle.className = document.body.classList.contains('light') ? 'fa-regular fa-sun' : 'fa-solid fa-moon';
+        };
+
+        function addMsg(text, isUser) {
+            const div = document.createElement('div');
+            div.className = `msg-group ${isUser ? 'user' : 'ai'}`;
+            div.innerHTML = `<div class="bubble-box">${text.replace(/\n/g, '<br>')}</div>`;
+            scroller.appendChild(div);
+            scroller.scrollTop = scroller.scrollHeight;
+        }
+
+        async function smartReply(msg) {
+            msg = msg.trim();
+            if (msg.includes('时间') || msg.includes('几点')) {
+                return new Date().toLocaleTimeString();
+            }
+            if (msg.includes('日期') || msg.includes('几号') || msg.includes('星期')) {
+                return new Date().toLocaleDateString('zh-CN', {
+                    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+                });
+            }
+            if (msg.includes('天气') || msg.includes('温度')) {
+                try {
+                    let loc = await fetch('https://ipapi.co/json/');
+                    let city = await loc.json();
+                    let res = await fetch(`https://api.vvhan.com/api/weather?city=${city.city}`);
+                    let data = await res.json();
+                    return `📍 城市：${data.city}\n🌤 天气：${data.info}\n🌡 温度：${data.temperature}℃`;
+                } catch (e) {
+                    return "无法获取天气";
+                }
+            }
+            try {
+                let res = await fetch(API_URL + "?message=" + encodeURIComponent(msg));
+                let data = await res.json();
+                return data.answer || data.data?.answer || "我暂时无法回答";
+            } catch {
+                return "服务异常";
+            }
+        }
+
+        async function send() {
+            const val = input.value.trim();
+            if (!val) return;
+            input.value = '';
+            addMsg(val, true);
+
+            const loading = document.createElement('div');
+            loading.className = 'msg-group ai';
+            loading.innerHTML = `<div class="bubble-box"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+            scroller.appendChild(loading);
+
+            let reply = await smartReply(val);
+            loading.remove();
+            addMsg(reply, false);
+        }
+
+        sendBtn.onclick = send;
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+            }
+        });
+    </script>
+</body>
+</html>
