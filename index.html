@@ -32,7 +32,6 @@
             font-family:'Google Sans','Roboto',sans-serif;
             transition:background .3s;
         }
-        /* 整个页面用绝对定位，不依赖flex，键盘弹出不会被挤压 */
         #app{
             position:absolute;top:0;left:0;right:0;bottom:0;
             display:flex;flex-direction:column;
@@ -152,22 +151,77 @@
         }
         #userInput::placeholder{color:var(--text-secondary)}
 
+        /* ===== 水波纹外层包裹 ===== */
+        .send-wrap{
+            position:relative;
+            flex-shrink:0;
+            width:38px;height:38px;
+        }
+        .send-wrap::before,
+        .send-wrap::after{
+            content:'';position:absolute;
+            top:50%;left:50%;
+            width:38px;height:38px;
+            border-radius:50%;
+            border:2px solid var(--ripple-color);
+            transform:translate(-50%,-50%) scale(1);
+            opacity:0;z-index:0;
+            pointer-events:none;
+            display:none;
+        }
+        .send-wrap.loading::before{
+            display:block;
+            animation:ripple1 1.8s infinite ease-out;
+        }
+        .send-wrap.loading::after{
+            display:block;
+            animation:ripple2 1.8s .6s infinite ease-out;
+        }
+        @keyframes ripple1{
+            0%{transform:translate(-50%,-50%) scale(1);opacity:.7}
+            100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}
+        }
+        @keyframes ripple2{
+            0%{transform:translate(-50%,-50%) scale(1);opacity:.7}
+            100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}
+        }
+
+        /* ===== 提问图标按钮 ===== */
         .send-btn{
-            width:36px;height:36px;border:none;border-radius:50%;
+            position:relative;z-index:1;
+            width:38px;height:38px;
+            border-radius:50%;
             display:flex;align-items:center;justify-content:center;
             cursor:pointer;flex-shrink:0;
-            background:var(--icon-bg);border:1px solid var(--border-color);
-            transition:all .25s;position:relative;overflow:visible;
+            background:var(--icon-bg);
+            border:1px solid var(--border-color);
+            padding:0;
+            transition:transform .2s ease,opacity .3s ease;
         }
         .send-btn img{
-            width:18px;height:18px;object-fit:contain;
+            width:20px;height:20px;object-fit:contain;
             pointer-events:none;position:relative;z-index:2;
         }
         .send-btn.empty{opacity:.85}
-        .send-btn.loading{animation:iconPulse 1.2s infinite ease-in-out}
-        @keyframes iconPulse{0%,100%{opacity:1}50%{opacity:.35}}
-        .send-btn:hover{background:var(--icon-bg);border-color:var(--border-color);transform:none}
-        .send-btn:active{transform:scale(.92)!important;transition-duration:.1s}
+
+        /* 桌面端悬停轻微放大 */
+        @media(hover:hover){
+            .send-btn:not(.loading):hover{
+                transform:scale(1.1);
+            }
+        }
+        /* 点击轻微缩小 */
+        .send-btn:not(.loading):active{
+            transform:scale(.92)!important;
+            transition-duration:.08s;
+        }
+        /* 思考中闪烁 */
+        .send-btn.loading{
+            animation:iconPulse 1.2s infinite ease-in-out;
+        }
+        @keyframes iconPulse{
+            0%,100%{opacity:1}50%{opacity:.35}
+        }
 
         .toast{
             position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -211,10 +265,14 @@
         <div class="footer-wrap">
             <div class="input-box">
                 <textarea id="userInput" placeholder="输入消息..." rows="1"></textarea>
+
                 <!-- ★★★ 自定义图标位置：修改下面 src="" 里的网址换成你自己的图标 ★★★ -->
-                <button class="send-btn empty" id="sendAction">
-                    <img src="https://cdn.jsdmirror.com/gh/iTaoPu/Chat.Ai@List/Spark.png" alt="发送">
-                </button>
+                <div class="send-wrap" id="sendWrap">
+                    <button class="send-btn empty" id="sendAction">
+                        <img src="https://cdn.jsdmirror.com/gh/iTaoPu/Chat.Ai@List/Spark.png" alt="发送">
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -226,28 +284,23 @@
         var scroller = document.getElementById('chat-scroller');
         var input = document.getElementById('userInput');
         var sendBtn = document.getElementById('sendAction');
+        var sendWrap = document.getElementById('sendWrap');
         var themeToggle = document.getElementById('themeToggle');
         var clearBtn = document.getElementById('clearBtn');
         var toastEl = document.getElementById('toast');
         var isSending = false;
 
-        /* ===== 移动端键盘适配：最笨但最靠谱的方案 ===== */
+        /* ===== 移动端键盘适配 ===== */
         var originalHeight = window.innerHeight;
         window.addEventListener('resize', function() {
             var nowHeight = window.innerHeight;
             if (nowHeight < originalHeight - 100) {
-                /* 键盘弹出了 */
-                setTimeout(function() {
-                    scroller.scrollTop = scroller.scrollHeight;
-                }, 100);
+                setTimeout(function() { scroller.scrollTop = scroller.scrollHeight; }, 100);
             }
             originalHeight = nowHeight;
         });
-        /* 输入框聚焦时也兜底滚一次 */
         input.addEventListener('focus', function() {
-            setTimeout(function() {
-                scroller.scrollTop = scroller.scrollHeight;
-            }, 300);
+            setTimeout(function() { scroller.scrollTop = scroller.scrollHeight; }, 300);
         });
 
         function showToast(msg, duration) {
@@ -386,6 +439,7 @@
             if (!val || isSending) return;
             isSending = true;
             sendBtn.classList.add('loading');
+            sendWrap.classList.add('loading');
             sendBtn.classList.remove('empty');
             input.value = '';
             input.style.height = 'auto';
@@ -408,6 +462,7 @@
             addMsg(reply, false);
             isSending = false;
             sendBtn.classList.remove('loading');
+            sendWrap.classList.remove('loading');
             updateSendBtn();
         }
 
