@@ -51,7 +51,6 @@
         }
 
         html { height: 100%; }
-        /* 【移动端适配】动态vh，键盘弹出时高度自动缩小 */
         html, body {
             height: 100vh;
             height: var(--vh, 100vh);
@@ -223,7 +222,6 @@
         }
         #userInput::placeholder { color: var(--text-secondary); }
 
-        /* ===== 提问图标：悬停/点击变动 + 水波纹 ===== */
         .send-btn {
             width: 36px;
             height: 36px;
@@ -248,17 +246,14 @@
         }
         .send-btn.empty { opacity: 0.85; }
 
-        /* 桌面悬停轻微放大 */
         @media (hover: hover) {
             .send-btn:not(.loading):hover { transform: scale(1.1); }
         }
-        /* 点击轻微缩小 */
         .send-btn:not(.loading):active {
             transform: scale(0.92) !important;
             transition-duration: 0.08s;
         }
 
-        /* 思考中：图标闪烁 */
         .send-btn.loading {
             animation: iconPulse 1.2s infinite ease-in-out;
             pointer-events: none;
@@ -268,7 +263,6 @@
             50% { opacity: 0.35; }
         }
 
-        /* 思考中：水波纹（用::before和::after，不加任何包裹层） */
         .send-btn::before,
         .send-btn::after {
             content: '';
@@ -337,7 +331,7 @@
 
     <div class="footer-wrap">
         <div class="input-box">
-            <textarea id="userInput" placeholder="给 智能Ai·星火 发送消息..." rows="1"></textarea>
+            <textarea id="userInput" placeholder="输入消息..." rows="1"></textarea>
 
             <!-- ★★★ 自定义图标：修改下面 src="" 里的网址 ★★★ -->
             <button class="send-btn empty" id="sendAction">
@@ -359,7 +353,7 @@
         const toastEl = document.getElementById('toast');
         let isSending = false;
 
-        /* 【移动端适配】动态vh，键盘弹出时body高度跟着缩小 */
+        /* 【移动端适配】动态vh */
         if (window.visualViewport) {
             var lastH = window.visualViewport.height;
             window.visualViewport.addEventListener('resize', function () {
@@ -455,16 +449,13 @@
         function addMsg(text, isUser, save) {
             var div = document.createElement('div');
             div.className = 'msg-group ' + (isUser ? 'user' : 'ai');
-
             var content = document.createElement('div');
             content.className = 'msg-content';
-
             var bubble = document.createElement('div');
             bubble.className = 'bubble-box';
             bubble.setAttribute('data-raw', text);
             bubble.innerHTML = text.replace(/\n/g, '<br>');
             content.appendChild(bubble);
-
             if (!isUser) {
                 var actions = document.createElement('div');
                 actions.className = 'msg-actions';
@@ -478,36 +469,103 @@
                 actions.appendChild(copyBtn);
                 content.appendChild(actions);
             }
-
             div.appendChild(content);
             scroller.appendChild(div);
             if (save !== false) { saveHistory(); scrollBottom(); }
         }
 
+        /* ===== 通用AI调用（天气fallback用） ===== */
+        async function askAI(msg) {
+            try {
+                var res = await fetch(API_URL + '?message=' + encodeURIComponent(msg));
+                var data = await res.json();
+                return data.answer || (data.data && data.data.answer) || "我暂时无法回答";
+            } catch (e) { return "服务异常，请稍后重试"; }
+        }
+
         async function smartReply(msg) {
             msg = msg.trim();
+
+            /* 时间 */
             if (msg.indexOf('时间') > -1 || msg.indexOf('几点') > -1) {
                 return new Date().toLocaleTimeString();
             }
+
+            /* 日期 */
             if (msg.indexOf('日期') > -1 || msg.indexOf('几号') > -1 || msg.indexOf('星期') > -1) {
                 return new Date().toLocaleDateString('zh-CN', {
                     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
                 });
             }
-            if (msg.indexOf('天气') > -1 || msg.indexOf('温度') > -1) {
-                try {
-                    var loc = await fetch('https://ipapi.co/json/');
-                    var city = await loc.json();
-                    var res = await fetch('https://api.vvhan.com/api/weather?city=' + city.city);
-                    var data = await res.json();
-                    return '📍 城市：' + data.city + '\n🌤 天气：' + data.info + '\n🌡 温度：' + data.temperature + '℃';
-                } catch (e) { return "无法获取天气"; }
+
+            /* ===== 天气查询（修复版） ===== */
+            if (msg.indexOf('天气') > -1 || msg.indexOf('温度') > -1 || msg.indexOf('气温') > -1) {
+                var city = '';
+
+                /* 1. 先从用户消息中提取城市名 */
+                var patterns = [
+                    /([\u4e00-\u9fa5]{2,6})(?:的)?(?:天气|温度|气温)/,
+                    /(?:在|去|到|从)([\u4e00-\u9fa5]{2,6})/,
+                    /^([\u4e00-\u9fa5]{2,6})(?:天气|温度|气温)$/,
+                ];
+                for (var p = 0; p < patterns.length; p++) {
+                    var m = msg.match(patterns[p]);
+                    if (m) { city = m[1]; break; }
+                }
+
+                /* 2. 没提取到就通过IP定位 */
+                if (!city) {
+                    try {
+                        var locRes = await fetch('https://ip.useragentinfo.com/json');
+                        var locData = await locRes.json();
+                        city = locData.city || locData.province || '';
+                    } catch (e) {
+                        /* IP定位失败，换一个源 */
+                        try {
+                            var locRes2 = await fetch('https://api.ip.sb/geoip');
+                            var locData2 = await locRes2.json();
+                            city = locData2.city || locData2.region || '';
+                        } catch (e2) { }
+                    }
+                }
+
+                /* 3. 有城市名就查实时天气 */
+                if (city) {
+                    try {
+                        var wRes = await fetch('https://wttr.in/' + encodeURIComponent(city) + '?format=j1');
+                        var wData = await wRes.json();
+                        var cur = wData.current_condition[0];
+
+                        /* 天气描述：优先中文，否则英文 */
+                        var desc = '未知';
+                        if (cur.lang_zh && cur.lang_zh[0] && cur.lang_zh[0].value) {
+                            desc = cur.lang_zh[0].value;
+                        } else if (cur.weatherDesc && cur.weatherDesc[0] && cur.weatherDesc[0].value) {
+                            desc = cur.weatherDesc[0].value;
+                        }
+
+                        /* 风向 */
+                        var windDir = cur.winddir16Point || '';
+                        var windStr = windDir ? windDir + ' ' + cur.windspeedKmph + 'km/h' : cur.windspeedKmph + 'km/h';
+
+                        return '📍 城市：' + city +
+                            '\n🌤 天气：' + desc +
+                            '\n🌡 温度：' + cur.temp_C + '℃（体感 ' + cur.FeelsLikeC + '℃）' +
+                            '\n💧 湿度：' + cur.humidity + '%' +
+                            '\n🌬 风速：' + windStr +
+                            '\n👁 能见度：' + cur.visibility + 'km';
+                    } catch (e) {
+                        /* 天气API失败，fallback到AI */
+                        return await askAI(msg);
+                    }
+                }
+
+                /* 4. 没有城市名也没定位到，交给AI */
+                return await askAI(msg);
             }
-            try {
-                var res = await fetch(API_URL + '?message=' + encodeURIComponent(msg));
-                var data = await res.json();
-                return data.answer || (data.data && data.data.answer) || "我暂时无法回答";
-            } catch (e) { return "服务异常"; }
+
+            /* 普通问题走AI */
+            return await askAI(msg);
         }
 
         async function send() {
